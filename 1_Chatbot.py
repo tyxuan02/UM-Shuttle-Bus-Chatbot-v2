@@ -9,7 +9,7 @@ from utils import get_table, create_action_table, create_knowledge_table, genera
 
 # Load environment variables
 load_dotenv()
-PROJECT_ID = os.getenv("PROJECT_ID")
+JAMAI_BASE_PROJECT_ID = os.getenv("JAMAI_BASE_PROJECT_ID")
 JAM_AI_BASE_API_KEY= os.getenv("JAM_AI_BASE_API_KEY")
 ACTION_TABLE_ID = 'um-shuttle-bus-chatbot-action'
 KNOWLEDGE_TABLE_ID = 'um-shuttle-bus-chatbot-knowledge'
@@ -20,7 +20,7 @@ st.set_page_config(page_title="UM Shuttle Bus Chatbot", page_icon="🚌")
 @st.cache_resource()
 def initialize_client():
     """Initialize and cache the JamAI client."""
-    return JamAI(token=JAM_AI_BASE_API_KEY, project_id=PROJECT_ID)
+    return JamAI(token=JAM_AI_BASE_API_KEY, project_id=JAMAI_BASE_PROJECT_ID)
 
 # Initialize tables
 @st.cache_data()

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-PROJECT_ID = os.getenv("PROJECT_ID")
+JAMAI_BASE_PROJECT_ID = os.getenv("JAMAI_BASE_PROJECT_ID")
 JAM_AI_BASE_API_KEY = os.getenv("JAM_AI_BASE_API_KEY")
 
 # Get table
@@ -14,7 +14,7 @@ def get_table(table_type, table_id):
     url = f'https://api.jamaibase.com/api/v1/gen_tables/{table_type}/{table_id}'
     try:
         response = requests.get(url, headers={
-            'X-PROJECT-ID': PROJECT_ID,
+            'X-PROJECT-ID': JAMAI_BASE_PROJECT_ID,
             'Authorization': f'Bearer {JAM_AI_BASE_API_KEY}',
             'Content-Type': 'application/json',
         })
@@ -36,7 +36,7 @@ def create_action_table(table_id):
     url = f'https://api.jamaibase.com/api/v1/gen_tables/action'
     try:
         response = requests.post(url, headers={
-            'X-PROJECT-ID': PROJECT_ID,
+            'X-PROJECT-ID': JAMAI_BASE_PROJECT_ID,
             'Authorization': f'Bearer {JAM_AI_BASE_API_KEY}',
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -79,7 +79,7 @@ def create_knowledge_table():
 
     try:
         response = requests.post(url, headers={
-            'X-PROJECT-ID': PROJECT_ID,
+            'X-PROJECT-ID': JAMAI_BASE_PROJECT_ID,
             'Authorization': f'Bearer {JAM_AI_BASE_API_KEY}',
             'Accept': 'application/json',
         },
