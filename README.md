@@ -16,7 +16,7 @@ UM Shuttle Bus Chatbot is a simple chatbot designed to provide information about
 
 ![Generate API key](get_api_key.png)
 
-5. Go back to the project folder on your local machine and create a .env file. Add the following lines to the .env file and replace YOUR_PROJECT_ID and YOUR_API_KEY with the project ID and API key you copied in step 3 and 4 respectively.:
+5. Go back to the project folder on your local machine and create a .env file. Add the following lines to the .env file and replace YOUR_PROJECT_ID and YOUR_API_KEY with the project ID and API key you copied in step 3 and 4 respectively:
 ```
 JAMAI_BASE_PROJECT_ID=YOUR_PROJECT_ID
 JAMAI_BASE_API_KEY=YOUR_API_KEY
