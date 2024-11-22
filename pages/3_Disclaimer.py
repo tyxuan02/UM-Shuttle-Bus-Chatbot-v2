@@ -31,13 +31,13 @@ with st.container():
             The <span class="highlight">UM Shuttle Bus Chatbot</span> is designed to provide users with information about the UM Shuttle Bus service.
         </p>
         <p class="content">
-            While we strive to provide accurate and up-to-date information, there may be instances where the chatbot provides responses that are inaccurate or differ from the actual circumstances.
+            There may be scenarios where the chatbot provides a response that is not accurate or relevant to the user's query. This is due to limited data availability and the generative nature of the chatbot's responses.
         </p>
         <p class="content">
-            This is due to the fact that the chatbot is trained on a limited dataset and may not have complete information about all possible scenarios.
+            For the most accurate and up-to-date information, please refer to the official UM Shuttle Bus service resources or contact the UM Shuttle Bus service directly.
         </p>
         <p class="content">
-            We appreciate your understanding.
+            Thank you for using the <span class="highlight">UM Shuttle Bus Chatbot</span>! 🚌
         </p>
     </div>
     """, unsafe_allow_html=True)

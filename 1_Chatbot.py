@@ -1,98 +1,138 @@
-# Chatbot implementation (and UI)
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-import json
+import re
 import streamlit as st
-import numpy as np
-from PIL import Image
-from response import generate_response
-from keras.models import load_model
-from nlp_utils import bag_of_words, preprocess_text
 import time
+from jamaibase import JamAI
+from PIL import Image
+from dotenv import load_dotenv
+from utils import get_table, create_action_table, create_knowledge_table, generate_response
+
+# Load environment variables
+load_dotenv()
+PROJECT_ID = os.getenv("PROJECT_ID")
+JAM_AI_BASE_API_KEY= os.getenv("JAM_AI_BASE_API_KEY")
+ACTION_TABLE_ID = 'um-shuttle-bus-chatbot-action'
+KNOWLEDGE_TABLE_ID = 'um-shuttle-bus-chatbot-knowledge'
 
 st.set_page_config(page_title="UM Shuttle Bus Chatbot", page_icon="🚌")
 
+# Initialize JamAI client
 @st.cache_resource()
-def load_data_and_model():
-    with open('intents.json') as data:
-        intents = json.load(data)
+def initialize_client():
+    """Initialize and cache the JamAI client."""
+    return JamAI(token=JAM_AI_BASE_API_KEY, project_id=PROJECT_ID)
 
-    with open('data.json') as data:
-        data = json.load(data)
+# Initialize tables
+@st.cache_data()
+def initialize_tables(action_table_id, knowledge_table_id):
+    """
+    Check and create necessary tables for Jamaibase.
+
+    Args:
+        action_table_id (str): ID for the action table.
+        knowledge_table_id (str): ID for the knowledge table.
+
+    Returns:
+        str: Status message indicating success or error.
+    """
+    try:
+        # Check and create knowledge table if needed
+        if not get_table("knowledge", knowledge_table_id):
+            created_knowledge = create_knowledge_table()
+            if not created_knowledge:
+                return False
+            
+        # Check and create action table if needed
+        if not get_table("action", action_table_id):
+            created_action = create_action_table(action_table_id)
+            if not created_action:
+                return False
+
+        return True
+    except Exception as e:
+        return f"Error during table initialization: {str(e)}"
     
-    all_words = []
-    tags = []
-    for intent in intents['intents']:
-        tag = intent['tag']
-        tags.append(tag)
-        for pattern in intent['patterns']:
-            words = preprocess_text(pattern)
-            all_words.extend(words)
-
-    all_words = sorted(set(all_words))
-    tags = sorted(set(tags))
-
-    model = load_model('model.h5')
-
-    return intents, data, all_words, tags, model
-
+# Stream response
 def stream_response(response):
     for word in response.split():
         yield word + " "
         time.sleep(0.05)
 
-def get_color_confidence(confidence):
-    if confidence >= 0.90:
-        return "green"
-    elif confidence >= 0.8:
-        return "orange"
-    elif confidence >= 0.75:
-        return "red"
+# Initialize client and tables for Jamaibase
+client = initialize_client()
+status = initialize_tables(ACTION_TABLE_ID, KNOWLEDGE_TABLE_ID)
 
-# Load data and model
-intents, data, all_words, tags, model = load_data_and_model()
+# Stop the app if there was an error initializing the tables
+if status is False:
+    st.error(f"Error initializing tables: Please make sure your API keys and project ID are correct.")
+    st.stop()
 
-# Streamlit UI
 st.title("🤖 UM Shuttle Bus Chatbot")
 st.write("-----------\n\n")
 
+# Reset chat
 if st.sidebar.button("Reset chat"):
     st.session_state.pop("messages", None)
 
+# Initialize session state
 if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?", "images": []}]
 
+# Display previous messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        if "image" in message and message["image"] is not None:
-            image = message["image"]
-            displayed_image = Image.open(image)
-            st.image(displayed_image)
+        if "images" in message and len(message["images"]) > 0:
+            for img_path in message["images"]:
+                try:
+                    image = Image.open(img_path)
+                    st.image(image, use_container_width=True, caption=img_path.split("/")[-1])
+                except Exception as e:
+                    st.write(f"Error loading {img_path}: {e}")
 
-if prompt := st.chat_input("Ask me something..."):
+# Handle new user input
+if prompt := st.chat_input("Ask me something...", max_chars=500):
+    # Display the user query
     with st.chat_message("user"):
         st.markdown(prompt)
-    st.session_state.messages.append({"role": "user", "content": prompt})
 
-    preprocessed_sentence = preprocess_text(prompt)
-    X_new = np.array([bag_of_words(preprocessed_sentence, all_words)])
-    y_pred = model.predict(X_new, verbose=0)
-    predicted_tag = tags[np.argmax(y_pred)]
-    tag_probability = y_pred[0][np.argmax(y_pred)]
+    # Append user message to session state
+    st.session_state.messages.append({"role": "user", "content": prompt, "images": []})
 
-    response, image = generate_response(predicted_tag, tag_probability, intents, data)
+    # Generate response
+    response = generate_response(client, prompt)
 
+    # Extract tags from the response
+    tag_pattern = r'\[(.*?)\]$'
+    match = re.search(tag_pattern, response)
+    response_text = re.sub(tag_pattern, "", response).strip()  # Remove tags from the response
+
+    tags = []
+    if match:
+        tags = match.group(1).split(", ")  # Extract and split the tags
+
+    # Determine the images to display
+    image_paths = []
+    for tag in tags:
+        if tag == "ROUTES":
+            image_paths.append("images/ROUTES.png")
+        elif tag == "SCHEDULE":
+            image_paths.append("images/SCHEDULE_ALL_ROUTES.png")
+        elif tag.startswith("ROUTE_"):
+            image_paths.append(f"images/{tag}.png")
+        elif tag.startswith("SCHEDULE_"):
+            image_paths.append(f"images/{tag}.png")
+
+   # Update the assistant message after generating the response
     with st.chat_message("assistant"):
-        st.write_stream(stream_response(response))
-    
-        if image is not None:
-            displayed_image = Image.open(image)
-            st.image(displayed_image)
-
-        if (tag_probability >= 0.75):
-            color = get_color_confidence(tag_probability)
-            st.markdown(f"<small style='color:{color}; font-weight:bold;'>Confidence: {tag_probability*100:.2f}%</small>", unsafe_allow_html=True)   
-
-    st.session_state.messages.append({"role": "assistant", "content": response, "image": image})
+        st.markdown(response_text)
+        if len(image_paths) > 0:
+            for img_path in image_paths:
+                try:
+                    image = Image.open(img_path)
+                    st.image(image, use_container_width=True, caption=img_path.split("/")[-1])
+                except Exception as e:
+                    st.write(f"Error loading {img_path}: {e}")
+                    
+    # Append the assistant's response and images to session state
+    st.session_state.messages.append({"role": "assistant", "content": response_text, "images": image_paths})
