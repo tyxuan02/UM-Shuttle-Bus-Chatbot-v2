@@ -37,7 +37,7 @@ st.markdown("""
 # Limitations
 st.write("\n\n")
 st.markdown("""
-**Limitation**: The chatbot does not provide real-time tracking of the shuttle buses at the moment. Besides, the chatbot cannot suggest direct routes to a specific bus stop or location.".
+**Limitation**: The chatbot does not provide real-time tracking of the shuttle buses. Besides, the chatbot cannot suggest direct routes to a specific bus stop or location.
 """)
 
 # Reminder

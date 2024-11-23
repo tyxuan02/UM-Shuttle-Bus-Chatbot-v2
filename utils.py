@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 JAMAI_BASE_PROJECT_ID = os.getenv("JAMAI_BASE_PROJECT_ID")
-JAM_AI_BASE_API_KEY = os.getenv("JAM_AI_BASE_API_KEY")
+JAMAI_BASE_API_KEY = os.getenv("JAMAI_BASE_API_KEY")
 
 # Get table
 def get_table(table_type, table_id):
@@ -15,7 +15,7 @@ def get_table(table_type, table_id):
     try:
         response = requests.get(url, headers={
             'X-PROJECT-ID': JAMAI_BASE_PROJECT_ID,
-            'Authorization': f'Bearer {JAM_AI_BASE_API_KEY}',
+            'Authorization': f'Bearer {JAMAI_BASE_API_KEY}',
             'Content-Type': 'application/json',
         })
         if response.status_code == 200:
@@ -37,7 +37,7 @@ def create_action_table(table_id):
     try:
         response = requests.post(url, headers={
             'X-PROJECT-ID': JAMAI_BASE_PROJECT_ID,
-            'Authorization': f'Bearer {JAM_AI_BASE_API_KEY}',
+            'Authorization': f'Bearer {JAMAI_BASE_API_KEY}',
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         }, json={
@@ -50,7 +50,7 @@ def create_action_table(table_id):
                         "object": "gen_config.llm",
                         "model": "ellm/meta-llama/Llama-3.1-70B-Instruct",
                         "system_prompt": "You are a versatile data generator responsible for processing input data and generating appropriate responses based on the specified column name and query. Tailor your response format and content according to the column name and context of the query, ensuring the answers are concise, relevant, and efficient without including unnecessary details or lengthy lists. Analyze the content for any metadata tags (e.g., [ROUTE], [SCHEDULE], etc.) to determine the context of the query. If a tag is detected (only the tag in the knowledge table), include it at the end of the response to indicate the relevant context (multiple tags allowed if applicable and store them in array format). Only return the tag if the questions are related to the route or schedule.",
-                        "prompt": "Table name: \"test\" query: ${query}. Based on the available information, provide an appropriate response for the column \"response\". Remember to act as a cell in a spreadsheet and provide concise, relevant information without explanations.",
+                        "prompt": "Table name: \"test\" query: ${query}. Based on the available information, provide an appropriate response for the column \"response\". Remember to act as a cell in a spreadsheet and provide concise, relevant information with an explanation if needed.",
                         "rag_params": {
                             "table_id": "um-shuttle-bus-chatbot-knowledge",
                             "k": 5
@@ -80,7 +80,7 @@ def create_knowledge_table():
     try:
         response = requests.post(url, headers={
             'X-PROJECT-ID': JAMAI_BASE_PROJECT_ID,
-            'Authorization': f'Bearer {JAM_AI_BASE_API_KEY}',
+            'Authorization': f'Bearer {JAMAI_BASE_API_KEY}',
             'Accept': 'application/json',
         },
         files={
